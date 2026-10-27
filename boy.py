@@ -7,6 +7,7 @@ from transitions import Machine
 class Boy:
     IDLE = 'IDLE'
     RUN = 'RUN'
+    AUTORUN = 'AUTORUN'
     SLEEP = 'SLEEP'
 
     SCREEN_WIDTH = 800
@@ -23,11 +24,12 @@ class Boy:
         self.image = load_image('animation_sheet.png')
         self.machine = Machine(
             model=self,
-            states=[self.IDLE, self.RUN, self.SLEEP],
+            states=[self.IDLE, self.RUN, self.AUTORUN, self.SLEEP],
             initial=self.IDLE,
             auto_transitions=False,
             transitions=[
                 {'trigger': 'sleep', 'source': self.IDLE, 'dest': self.SLEEP},
+                {'trigger': 'autorun', 'source': self.IDLE, 'dest': self.AUTORUN},
                 {
                     'trigger': 'run',
                     'source': [self.IDLE, self.SLEEP],
@@ -63,6 +65,16 @@ class Boy:
                 ),
                 self.SCREEN_WIDTH - self.HALF_WIDTH,
             )
+        elif self.state == self.AUTORUN:
+            self.frame = (self.frame + 1) % 8
+            self.x += self.face_dir * self.RUN_SPEED
+
+            if self.x >= self.SCREEN_WIDTH - self.HALF_WIDTH:
+                self.x = self.SCREEN_WIDTH - self.HALF_WIDTH
+                self.face_dir = -1
+            elif self.x <= self.HALF_WIDTH:
+                self.x = self.HALF_WIDTH
+                self.face_dir = 1
 
     def reset_idle_timer(self):
         self.idle_started_at = time.monotonic()
@@ -107,7 +119,7 @@ class Boy:
             )
             return
 
-        if self.state == self.RUN:
+        if self.state in (self.RUN, self.AUTORUN):
             row = 100 if self.face_dir == 1 else 0
             self.image.clip_draw(self.frame * 100, row, 100, 100, self.x, self.y)
             return
