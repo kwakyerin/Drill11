@@ -11,6 +11,10 @@ class AUTORUN(State):
         super().__init__('AUTORUN')
 
     def update(self, boy):
+        if time.monotonic() - boy.autorun_started_at >= boy.AUTORUN_DURATION:
+            boy.stop_autorun()
+            return
+
         boy.frame = (boy.frame + 1) % 8
         boy.x += boy.face_dir * boy.RUN_SPEED
 
@@ -30,6 +34,7 @@ class Boy:
     SCREEN_WIDTH = 800
     HALF_WIDTH = 50
     RUN_SPEED = 5
+    AUTORUN_DURATION = 5
     SLEEP_OFFSET_Y = 10
 
     def __init__(self):
@@ -38,6 +43,7 @@ class Boy:
         self.face_dir = 1
         self.pressed_directions = []
         self.idle_started_at = time.monotonic()
+        self.autorun_started_at = self.idle_started_at
         self.image = load_image('animation_sheet.png')
         self.autorun_state = AUTORUN()
         self.machine = Machine(
@@ -47,7 +53,18 @@ class Boy:
             auto_transitions=False,
             transitions=[
                 {'trigger': 'sleep', 'source': self.IDLE, 'dest': self.SLEEP},
-                {'trigger': 'autorun', 'source': self.IDLE, 'dest': self.AUTORUN},
+                {
+                    'trigger': 'autorun',
+                    'source': self.IDLE,
+                    'dest': self.AUTORUN,
+                    'after': 'start_autorun_timer',
+                },
+                {
+                    'trigger': 'stop_autorun',
+                    'source': self.AUTORUN,
+                    'dest': self.IDLE,
+                    'after': 'reset_idle_timer',
+                },
                 {
                     'trigger': 'run',
                     'source': [self.IDLE, self.SLEEP],
@@ -88,6 +105,9 @@ class Boy:
 
     def reset_idle_timer(self):
         self.idle_started_at = time.monotonic()
+
+    def start_autorun_timer(self):
+        self.autorun_started_at = time.monotonic()
 
     def press_direction(self, direction):
         if direction in self.pressed_directions:
