@@ -67,7 +67,7 @@ class Boy:
                 },
                 {
                     'trigger': 'run',
-                    'source': [self.IDLE, self.SLEEP],
+                    'source': [self.IDLE, self.SLEEP, self.AUTORUN],
                     'dest': self.RUN,
                 },
                 {
@@ -115,7 +115,7 @@ class Boy:
         self.pressed_directions.append(direction)
         self.face_dir = direction
 
-        if self.state in (self.IDLE, self.SLEEP):
+        if self.state in (self.IDLE, self.SLEEP, self.AUTORUN):
             self.frame = 0
             self.run()
 
