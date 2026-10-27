@@ -16,13 +16,14 @@ class AUTORUN(State):
             return
 
         boy.frame = (boy.frame + 1) % 8
-        boy.x += boy.face_dir * boy.RUN_SPEED
+        half_size = boy.AUTORUN_SIZE / 2
+        boy.x += boy.face_dir * boy.AUTORUN_SPEED
 
-        if boy.x >= boy.SCREEN_WIDTH - boy.HALF_WIDTH:
-            boy.x = boy.SCREEN_WIDTH - boy.HALF_WIDTH
+        if boy.x >= boy.SCREEN_WIDTH - half_size:
+            boy.x = boy.SCREEN_WIDTH - half_size
             boy.face_dir = -1
-        elif boy.x <= boy.HALF_WIDTH:
-            boy.x = boy.HALF_WIDTH
+        elif boy.x <= half_size:
+            boy.x = half_size
             boy.face_dir = 1
 
 class Boy:
@@ -34,7 +35,9 @@ class Boy:
     SCREEN_WIDTH = 800
     HALF_WIDTH = 50
     RUN_SPEED = 5
+    AUTORUN_SPEED = 8
     AUTORUN_DURATION = 5
+    AUTORUN_SIZE = 115
     SLEEP_OFFSET_Y = 10
 
     def __init__(self):
@@ -151,7 +154,17 @@ class Boy:
 
         if self.state in (self.RUN, self.AUTORUN):
             row = 100 if self.face_dir == 1 else 0
-            self.image.clip_draw(self.frame * 100, row, 100, 100, self.x, self.y)
+            size = self.AUTORUN_SIZE if self.state == self.AUTORUN else 100
+            self.image.clip_draw(
+                self.frame * 100,
+                row,
+                100,
+                100,
+                self.x,
+                self.y,
+                size,
+                size,
+            )
             return
 
         if self.face_dir == 1:
