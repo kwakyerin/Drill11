@@ -3,6 +3,23 @@ from math import pi
 
 from pico2d import load_image
 from transitions import Machine
+from transitions.core import State
+
+
+class AUTORUN(State):
+    def __init__(self):
+        super().__init__('AUTORUN')
+
+    def update(self, boy):
+        boy.frame = (boy.frame + 1) % 8
+        boy.x += boy.face_dir * boy.RUN_SPEED
+
+        if boy.x >= boy.SCREEN_WIDTH - boy.HALF_WIDTH:
+            boy.x = boy.SCREEN_WIDTH - boy.HALF_WIDTH
+            boy.face_dir = -1
+        elif boy.x <= boy.HALF_WIDTH:
+            boy.x = boy.HALF_WIDTH
+            boy.face_dir = 1
 
 class Boy:
     IDLE = 'IDLE'
@@ -22,9 +39,10 @@ class Boy:
         self.pressed_directions = []
         self.idle_started_at = time.monotonic()
         self.image = load_image('animation_sheet.png')
+        self.autorun_state = AUTORUN()
         self.machine = Machine(
             model=self,
-            states=[self.IDLE, self.RUN, self.AUTORUN, self.SLEEP],
+            states=[self.IDLE, self.RUN, self.autorun_state, self.SLEEP],
             initial=self.IDLE,
             auto_transitions=False,
             transitions=[
@@ -66,15 +84,7 @@ class Boy:
                 self.SCREEN_WIDTH - self.HALF_WIDTH,
             )
         elif self.state == self.AUTORUN:
-            self.frame = (self.frame + 1) % 8
-            self.x += self.face_dir * self.RUN_SPEED
-
-            if self.x >= self.SCREEN_WIDTH - self.HALF_WIDTH:
-                self.x = self.SCREEN_WIDTH - self.HALF_WIDTH
-                self.face_dir = -1
-            elif self.x <= self.HALF_WIDTH:
-                self.x = self.HALF_WIDTH
-                self.face_dir = 1
+            self.autorun_state.update(self)
 
     def reset_idle_timer(self):
         self.idle_started_at = time.monotonic()
